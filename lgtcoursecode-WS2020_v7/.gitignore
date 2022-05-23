@@ -1,0 +1,11 @@
+main/qcd
+main_meas/meas
+main_test/test
+*.log
+*.out
+*.o
+*.d
+.DS_Store
+.settings
+.cproject
+.project

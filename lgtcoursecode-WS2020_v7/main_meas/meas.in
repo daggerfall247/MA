@@ -1,0 +1,20 @@
+outFileId      1
+odir           ../../testConfigs/
+beta           5.845
+seed           17846
+sconf          1
+fconf          1
+econf          1
+mwil           0
+tLoopExtent    4 4 1
+tSmear         1 0.5
+rLoopExtent    4 4 1
+rSmear         20 0.5
+mcorrs         1
+kappa          0.1588
+source         0 0 0 0
+stype          1
+nmax           5000
+prec           1.0e-08
+n2pt           1
+gammas         5 5
