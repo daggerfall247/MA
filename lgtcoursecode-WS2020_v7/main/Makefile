@@ -26,7 +26,7 @@ ADMIN = init sun_vfunc endian error_checks utils
 
 IO = IO_utils inp_IO config_IO
 
-UPD = update metro exp_fct
+UPD = update metro exp_fct heatbath
 
 OBS = plaquette
 

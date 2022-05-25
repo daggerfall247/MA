@@ -16,12 +16,12 @@
 #define HEADERS_H
 
 #define DIM 4
-#define SUN 3
+#define SUN 2
 
-#define LENGT  4
-#define LENGS1 4
-#define LENGS2 4
-#define LENGS3 4
+#define LENGT  24
+#define LENGS1 24
+#define LENGS2 24
+#define LENGS3 24
 
 #define NAME_SIZE 128
 /* base and dir will be NAME_SIZE long, plus '/' and 4 chars for '.ext' */
@@ -29,6 +29,7 @@
 #define DEBUG 0
 
 /* SIM_TYPE==0 : Metropolis */
+/* SIM_TYPE==1 : Heatbath (just with SUN = 2) */
 #define SIM_TYPE 0
 
 /* SWEEP_TYPE==1 : random sweeps */

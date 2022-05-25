@@ -85,6 +85,11 @@ extern void staples(int,int,sun_mat*);
 extern double localMetropolisUpdate(int,int,int);
 #endif
 
+#ifndef HEATBATH_C
+extern void staples(int,int,sun_mat*);
+extern double localHeatbathUpdate(int,int,int);
+#endif
+
 #ifndef UPDATE_C
 extern void gaugefieldUpdate(int,int,int,int);
 #endif

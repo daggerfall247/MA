@@ -42,8 +42,8 @@ void gaugefieldUpdate(int iup,int nup,int utype,int stype)
 
    checkpoint("update -- in");
 
-   error(utype!=0,"update [update.c]","Unknown update type! Only "
-           "Metropolis (SIM_TYPE=0) implemented!");
+   error(utype!=0 && utype!=1,"update [update.c]","Unknown update type! Only "
+           "Metropolis (SIM_TYPE=0) and heatbath (SIM_TYPE=1) implemented!");
    error(stype!=0 && stype!=1,"update [update.c]","Unknown sweep type! "
            "Only sequential (SWEEP_TYPE=0) and random (SWEEP_TYPE=1) "
            "sweeps implemented!");
@@ -75,8 +75,11 @@ void gaugefieldUpdate(int iup,int nup,int utype,int stype)
             }
             else
                idir=dir;
+               
             if(utype==0)
                nsum+=localMetropolisUpdate(in,dir,1);
+            else if(utype==1)
+               nsum+=localHeatbathUpdate(in,dir,1);
          }
       }
       
