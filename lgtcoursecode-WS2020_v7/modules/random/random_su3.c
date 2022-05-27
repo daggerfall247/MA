@@ -71,7 +71,7 @@ void gauss(double *rd,int n)
       ranlxd(ud,2);
       x1=ud[0];
       x2=ud[1];
-      rho=sqrt(-log(1.0-x1));
+      rho=sqrt(-2.0*log(1.0-x1));
       x2*=twopi;
       y1=rho*sin(x2);
       y2=rho*cos(x2);
@@ -106,7 +106,7 @@ void su3RandomVector(su3vec *v)
 }
 
 
-void su3RandomMatrix(su3mat *u)
+void su3RandomMatrix(su3mat *u) /* TODO: FIX FACTOR OF SQRT(2) IN GAUSS */
 {
    int i;
    double *r,norm,fact;
