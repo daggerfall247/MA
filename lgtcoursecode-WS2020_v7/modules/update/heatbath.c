@@ -68,6 +68,7 @@ void staples(int n, int dir, sun_mat *stap)
 double localHeatbathUpdate(int n, int dir, int m)
 {
 #if (SUN == 2)
+    int im, count = 0;
     double a, ud[4], lsqr, angles[2], length, x[4];
 
     su2mat A, X;
@@ -79,27 +80,32 @@ double localHeatbathUpdate(int n, int dir, int m)
         return 0.0;
     }
     su2_dble_div(A, a);
-    do
+
+    for (im = 0; im < m; im++)
     {
-        ranlxd(ud, 4);
-        lsqr = -1.0 / (2.0 * a * runParams.beta) * (log(1. - ud[1]) + pow(cos(2 * M_PI * (1. - ud[2])), 2) * log(1. - ud[3]));
-    } while (pow(ud[3], 2) > 1 - pow(lsqr, 2));
+        do
+        {
+            ranlxd(ud, 4);
+            lsqr = -1.0 / (2.0 * a * runParams.beta) * (log(1. - ud[1]) + pow(cos(2 * M_PI * (1. - ud[2])), 2) * log(1. - ud[3]));
+            count++;
+        } while (pow(ud[3], 2) > 1 - pow(lsqr, 2));
 
-    ranlxd(angles, 2);
-    angles[0] *= 2.;
-    angles[0] -= 1.;
-    angles[0] = acos(angles[1]);
-    angles[1] *= 2. * M_PI;
+        ranlxd(angles, 2);
+        angles[0] *= 2.;
+        angles[0] -= 1.;
+        angles[0] = acos(angles[1]);
+        angles[1] *= 2. * M_PI;
 
-    x[0] = sqrt(1 - lsqr);
-    length = sqrt(1 - pow(x[0], 2));
-    x[1] = length * sin(angles[0]) * cos(angles[1]);
-    x[2] = length * sin(angles[0]) * sin(angles[1]);
-    x[3] = length * cos(angles[0]);
+        x[0] = sqrt(1 - lsqr);
+        length = sqrt(1 - pow(x[0], 2));
+        x[1] = length * sin(angles[0]) * cos(angles[1]);
+        x[2] = length * sin(angles[0]) * sin(angles[1]);
+        x[3] = length * cos(angles[0]);
 
-    mk_dble_array_su2(x, X);
-    su2_mat_mul_dag(*pu[n][dir], X, A);
-    return 1.0;
+        mk_dble_array_su2(x, X);
+        su2_mat_mul_dag(*pu[n][dir], X, A);
+    }
+    return (double)count / m;
 
 #elif (SUN == 3)
 

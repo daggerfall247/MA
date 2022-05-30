@@ -31,7 +31,9 @@ int main(int argc,char *argv[])
            "To compile and run tests, please set lattice to 4^4.");
    initArrayOfNeighbours();
    initGaugeField(1);
-   runAllTests();
+   /*runAllTests();*/
+
+   
 
    return 0;
 }

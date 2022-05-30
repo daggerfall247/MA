@@ -5,5 +5,5 @@ epsilon       0.1
 nconf         10
 ntherm        100
 ndecorr       1
-writeConfFreq 1
+writeConfFreq 0
 seed          17846
