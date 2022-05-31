@@ -18,10 +18,10 @@
 #define DIM 4
 #define SUN 2
 
-#define LENGT  4
-#define LENGS1 4
-#define LENGS2 4
-#define LENGS3 4
+#define LENGT  10
+#define LENGS1 10
+#define LENGS2 10
+#define LENGS3 10
 
 #define NAME_SIZE 128
 /* base and dir will be NAME_SIZE long, plus '/' and 4 chars for '.ext' */
@@ -33,7 +33,7 @@
 #define SIM_TYPE 1
 
 /* SWEEP_TYPE==1 : random sweeps */
-#define SWEEP_TYPE 1
+#define SWEEP_TYPE 0
 
 /******************************************************************************
 * Checks

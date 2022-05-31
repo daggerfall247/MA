@@ -1,9 +1,9 @@
 outFileId     1
 outputDir     .
-beta          6.0
+beta          2.3
 epsilon       0.1
-nconf         10
-ntherm        100
+nconf         100
+ntherm        10000
 ndecorr       1
-writeConfFreq 0
+writeConfFreq 1
 seed          17846
