@@ -32,92 +32,159 @@
 #include "headers.h"
 #include "modules.h"
 
-/*
-void staples(int n, int dir, sun_mat *stap)
+
+double generateSU2InHeatbath(su2mat *X, double alpha)
 {
-    int kk, n1, n2;
-    sun_mat un[4];
+    int count = 0;
+    double ud[4], lambda_sqr, angles[2], length, x[4];
 
-    sun_zero(un[3]);
-
-    for (kk = 0; kk < DIM; kk++)
+    do
     {
-        if (kk != dir)
-        {
-            n1 = neib[n][dir];
-            n2 = neib[n][kk];
+        ranlxd(ud, 4);
+        lambda_sqr = -1.0 / alpha * (log(1. - ud[1]) + pow(cos(2 * M_PI * (1. - ud[2])), 2) * log(1. - ud[3]));
+        count++;
+    } while (pow(ud[3], 2) > 1 - 0.5 * pow(lambda_sqr, 2));
 
-            sun_mul_dag(un[1], *pu[n1][kk], *pu[n2][dir]);
-            sun_mul_dag(un[0], un[1], *pu[n][kk]);
-            sun_add(un[2], un[3], un[0]);
+    ranlxd(angles, 2);
+    angles[0] *= 2.;
+    angles[0] -= 1.;
+    angles[0] = acos(angles[1]);
+    angles[1] *= 2. * PI;
 
-            n2 = neib[n][kk + DIM];
-            n1 = neib[n2][dir];
+    x[0] = 1 - lambda_sqr;
+    length = sqrt(1 - pow(x[0], 2));
+    x[1] = length * sin(angles[0]) * cos(angles[1]);
+    x[2] = length * sin(angles[0]) * sin(angles[1]);
+    x[3] = length * cos(angles[0]);
 
-            sun_dag(un[0], *pu[n1][kk]);
-            sun_mul_dag(un[1], un[0], *pu[n2][dir]);
-            sun_mul(un[0], un[1], *pu[n2][kk]);
-            sun_add(un[3], un[2], un[0]);
-        }
-    }
+    mk_dble_array_su2(x, *X);
 
-    *stap = un[3];
+
+#if DEBUG == 1
+    double det_1, det_2;
+    su2mat X_dag, res;
+    su2_dag(X_dag, X);
+    su2_mat_mul(res, X_dag, X);
+    su2_det(det_2, res);
+    su2_det(det_1, X);
+    printf("%3.20f   %3.20f\n", det_1, det_2);
+#endif
+    return count;
 }
-*/
+
 
 double localHeatbathUpdate(int n, int dir, int m)
 {
-#if (SUN == 2)
-    int im, count = 0;
-    double sqrt_det, ud[4], lambda_sqr, angles[2], length, x[4];
 
+    int count = 0;
+    double sqrt_det, alpha;
+
+#if (SUN == 2)
     su2mat A, X;
     staples(n, dir, &A);
     su2_det_sqrt(sqrt_det, A);
+
     if (sqrt_det <= __DBL_EPSILON__)
     {
         /*su2RandomMatrix(pu[n][dir]);*/
         return 0.0;
     }
+    alpha = sqrt_det * runParams.beta;
     su2_dble_div(A, sqrt_det);
 
-    for (im = 0; im < m; im++)
-    {
-        do
-        {
-            ranlxd(ud, 4);
-            lambda_sqr = -1.0 / (2.0 * sqrt_det * runParams.beta) * (log(1. - ud[1]) + pow(cos(2 * M_PI * (1. - ud[2])), 2) * log(1. - ud[3]));
-            count++;
-        } while (pow(ud[3], 2) > 1 - pow(lambda_sqr, 2));
-
-        ranlxd(angles, 2);
-        angles[0] *= 2.;
-        angles[0] -= 1.;
-        angles[0] = acos(angles[1]);
-        angles[1] *= 2. * PI;
-
-        x[0] = 1 - 2.0*lambda_sqr;
-        length = sqrt(1 - pow(x[0], 2));
-        x[1] = length * sin(angles[0]) * cos(angles[1]);
-        x[2] = length * sin(angles[0]) * sin(angles[1]);
-        x[3] = length * cos(angles[0]);
-
-        mk_dble_array_su2(x, X);
-
-#if DEBUG == 1
-        double det_1, det_2;
-        su2mat X_dag, res;
-        su2_dag(X_dag, X);
-        su2_mat_mul(res, X_dag, X);
-        su2_det(det_2, res);
-        su2_det(det_1, X);
-        printf("%3.20f   %3.20f\n", det_1, det_2);
-#endif
-        su2_mat_mul_dag(*pu[n][dir], X, A);
-    }
-    return (double)m / count;
+    count += generateSU2InHeatbath(&X, alpha);
+    su2_mat_mul_dag(*pu[n][dir], X, A); /*U = X*V^dag*/
+    return 1.0 / count;
 
 #elif (SUN == 3)
 
+    su3mat heatbath_su3, old_link, staple_sum, Temp_1, Temp_2;
+    su2mat heatbath_su2, generated, new_link_su2;
+
+    staples(n, dir, &staple_sum);
+    old_link = *pu[n][dir];  
+
+  
+    su3_mat_mul(heatbath_su3, old_link, staple_sum);
+    extr_sub1(heatbath_su2, heatbath_su3);
+    
+    su2_det_sqrt(sqrt_det, heatbath_su2);
+
+    if (sqrt_det <= __DBL_EPSILON__)
+    {
+        /*su3RandomMatrix(pu[n][dir]);*/
+        return 0.0;
+    }
+    su2_dble_div(heatbath_su2, sqrt_det);
+
+    alpha = sqrt_det * runParams.beta * 2.0 / 3.0;
+
+    count += generateSU2InHeatbath(&generated, alpha);
+    su2_mat_mul_dag(new_link_su2, generated, heatbath_su2);
+    create_su3_sub1(Temp_1, new_link_su2);
+
+
+    su3_mat_mul(Temp_2, Temp_1, heatbath_su3);
+    heatbath_su3 = Temp_2;
+    su3_mat_mul(Temp_2, Temp_1, old_link);
+    old_link = Temp_2;
+
+
+
+ 
+    su3_mat_mul(heatbath_su3, old_link, staple_sum);
+
+    extr_sub2(heatbath_su2, heatbath_su3);
+    su2_det_sqrt(sqrt_det, heatbath_su2);
+
+    if (sqrt_det <= __DBL_EPSILON__)
+    {
+        /*su3RandomMatrix(pu[n][dir]);*/
+        return 0.0;
+    }
+    su2_dble_div(heatbath_su2, sqrt_det);
+
+    alpha = sqrt_det * runParams.beta * 2.0 / 3.0;
+
+    count += generateSU2InHeatbath(&generated, alpha);
+    su2_mat_mul_dag(new_link_su2, generated, heatbath_su2);
+    create_su3_sub2(Temp_1, new_link_su2);
+
+
+    su3_mat_mul(Temp_2, Temp_1, heatbath_su3);
+    heatbath_su3 = Temp_2;
+    su3_mat_mul(Temp_2, Temp_1, old_link);
+    old_link = Temp_2;
+
+
+  
+    su3_mat_mul(heatbath_su3, old_link, staple_sum);
+
+    extr_sub3(heatbath_su2, heatbath_su3);
+    su2_det_sqrt(sqrt_det, heatbath_su2);
+
+    if (sqrt_det <= __DBL_EPSILON__)
+    {
+        /*su3RandomMatrix(pu[n][dir]);*/
+        return 0.0;
+    }
+    su2_dble_div(heatbath_su2, sqrt_det);
+
+    alpha = sqrt_det * runParams.beta * 2.0 / 3.0;
+
+    count += generateSU2InHeatbath(&generated, alpha);
+    su2_mat_mul_dag(new_link_su2, generated, heatbath_su2);
+    create_su3_sub3(Temp_1, new_link_su2);
+
+
+    su3_mat_mul(Temp_2, Temp_1, heatbath_su3);
+    heatbath_su3 = Temp_2;
+    su3_mat_mul(Temp_2, Temp_1, old_link);
+    old_link = Temp_2;
+
+    *pu[n][dir] = old_link;
+
+
+    return 3.0 / count;
 #endif
 }
