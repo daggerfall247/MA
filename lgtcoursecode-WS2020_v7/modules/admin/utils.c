@@ -91,3 +91,21 @@ int custom_isinf(double x)
       return 1;
    else return 0;
 }
+
+int fact(int n)
+{
+    int prod = 1;
+    for (int i = n; i > 0; i--)
+    {
+        prod *= i;
+    }
+    return prod;
+}
+
+void swap(int *a, int *b)
+{
+    int temp;
+    temp = *a;
+    *a = *b;
+    *b = temp;
+}

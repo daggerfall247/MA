@@ -111,8 +111,10 @@ extern void checkpoint(char *format,...);
 #endif
 
 #ifndef CONFIG_IO_C
-extern void writeConfig(char*);
-extern void readConfig(char*);
+extern void prepareConfig(char*);
+extern void writeHeaderToConfig(char*);
+extern void writeConfig(char*, int);
+extern void readConfig(char*, int);
 #endif
 
 /* Initialisation */
@@ -120,6 +122,11 @@ extern void readConfig(char*);
 #ifndef INIT_C
 extern void initProgram(int);
 extern void initArrayOfNeighbours(void);
+extern void updateArrayOfIndexMF(int);
+extern void initArrayOfSubLattices(void);
+extern void initGlobalArrays(void);
+extern void initArrayOfBorders(int);
+extern void initArrayOfI(void);
 extern void initGaugeField(int);
 extern void releaseGaugeField(void);
 extern void allocateGaugeField(sun_mat *u[VOL][DIM]);
@@ -144,6 +151,8 @@ extern void su2RandomMatrix(su2mat*);
 extern double getTime(void);
 extern int custom_isnan(double);
 extern int custom_isinf(double);
+extern int fact(int);
+extern void swap(int*, int*);
 #endif
 
 #ifndef ERROR_CHECKS_C

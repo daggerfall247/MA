@@ -41,7 +41,7 @@ int main(int argc,char *argv[])
    initGaugeField(1);
 
    if(rconf)
-      readConfig(cnfg_file);
+      readConfig(cnfg_file,0);
 
    checkForErrors(1,0);
 
@@ -55,7 +55,7 @@ int main(int argc,char *argv[])
       {
          nw++;
          sprintf(cnfg_file,"%s_n%d",CNFG_FILE,nw);
-         writeConfig(cnfg_file);
+         writeConfig(cnfg_file,0);
       }
 
       checkForErrors(1,0);

@@ -32,7 +32,6 @@
 #include "headers.h"
 #include "modules.h"
 
-
 double generateSU2InHeatbath(su2mat *X, double alpha)
 {
     int count = 0;
@@ -59,7 +58,6 @@ double generateSU2InHeatbath(su2mat *X, double alpha)
 
     mk_dble_array_su2(x, *X);
 
-
 #if DEBUG == 1
     double det_1, det_2;
     su2mat X_dag, res;
@@ -72,7 +70,6 @@ double generateSU2InHeatbath(su2mat *X, double alpha)
     return count;
 }
 
-
 double localHeatbathUpdate(int n, int dir, int m)
 {
 
@@ -80,7 +77,8 @@ double localHeatbathUpdate(int n, int dir, int m)
     double sqrt_det, alpha;
 
 #if (SUN == 2)
-    su2mat A, X;
+    su2mat A, X, U;
+
     staples(n, dir, &A);
     su2_det_sqrt(sqrt_det, A);
 
@@ -89,11 +87,14 @@ double localHeatbathUpdate(int n, int dir, int m)
         /*su2RandomMatrix(pu[n][dir]);*/
         return 0.0;
     }
-    alpha = sqrt_det * runParams.beta;
+
     su2_dble_div(A, sqrt_det);
 
+    alpha = sqrt_det * runParams.beta;
+
     count += generateSU2InHeatbath(&X, alpha);
-    su2_mat_mul_dag(*pu[n][dir], X, A); /*U = X*V^dag*/
+    su2_mat_mul_dag(U, X, A); /*U = X*V^dag*/
+    *pu[n][dir] = U;
     return 1.0 / count;
 
 #elif (SUN == 3)
@@ -102,88 +103,57 @@ double localHeatbathUpdate(int n, int dir, int m)
     su2mat heatbath_su2, generated, new_link_su2;
 
     staples(n, dir, &staple_sum);
-    old_link = *pu[n][dir];  
+    old_link = *pu[n][dir];
 
-  
-    su3_mat_mul(heatbath_su3, old_link, staple_sum);
-    extr_sub1(heatbath_su2, heatbath_su3);
-    
-    su2_det_sqrt(sqrt_det, heatbath_su2);
-
-    if (sqrt_det <= __DBL_EPSILON__)
+    for (int i = 1; i <= 3; i++)
     {
-        /*su3RandomMatrix(pu[n][dir]);*/
-        return 0.0;
+        su3_mat_mul(heatbath_su3, old_link, staple_sum);
+        switch (i)
+        {
+        case 1:
+            extr_sub1(heatbath_su2, heatbath_su3);
+            break;
+        case 2:
+            extr_sub2(heatbath_su2, heatbath_su3);
+            break;
+        case 3:
+            extr_sub3(heatbath_su2, heatbath_su3);
+            break;
+        }
+        su2_det_sqrt(sqrt_det, heatbath_su2);
+
+        if (sqrt_det <= __DBL_EPSILON__)
+        {
+            /*su3RandomMatrix(pu[n][dir]);*/
+            return 0.0;
+        }
+        su2_dble_div(heatbath_su2, sqrt_det);
+
+        alpha = sqrt_det * runParams.beta * 2.0 / 3.0;
+
+        count += generateSU2InHeatbath(&generated, alpha);
+        su2_mat_mul_dag(new_link_su2, generated, heatbath_su2);
+
+        switch (i)
+        {
+        case 1:
+            create_su3_sub1(Temp_1, new_link_su2);
+            break;
+        case 2:
+            create_su3_sub2(Temp_1, new_link_su2);
+            break;
+        case 3:
+            create_su3_sub3(Temp_1, new_link_su2);
+            break;
+        }
+
+        su3_mat_mul(Temp_2, Temp_1, heatbath_su3);
+        heatbath_su3 = Temp_2;
+        su3_mat_mul(Temp_2, Temp_1, old_link);
+        old_link = Temp_2;
     }
-    su2_dble_div(heatbath_su2, sqrt_det);
-
-    alpha = sqrt_det * runParams.beta * 2.0 / 3.0;
-
-    count += generateSU2InHeatbath(&generated, alpha);
-    su2_mat_mul_dag(new_link_su2, generated, heatbath_su2);
-    create_su3_sub1(Temp_1, new_link_su2);
-
-
-    su3_mat_mul(Temp_2, Temp_1, heatbath_su3);
-    heatbath_su3 = Temp_2;
-    su3_mat_mul(Temp_2, Temp_1, old_link);
-    old_link = Temp_2;
-
-
-
- 
-    su3_mat_mul(heatbath_su3, old_link, staple_sum);
-
-    extr_sub2(heatbath_su2, heatbath_su3);
-    su2_det_sqrt(sqrt_det, heatbath_su2);
-
-    if (sqrt_det <= __DBL_EPSILON__)
-    {
-        /*su3RandomMatrix(pu[n][dir]);*/
-        return 0.0;
-    }
-    su2_dble_div(heatbath_su2, sqrt_det);
-
-    alpha = sqrt_det * runParams.beta * 2.0 / 3.0;
-
-    count += generateSU2InHeatbath(&generated, alpha);
-    su2_mat_mul_dag(new_link_su2, generated, heatbath_su2);
-    create_su3_sub2(Temp_1, new_link_su2);
-
-
-    su3_mat_mul(Temp_2, Temp_1, heatbath_su3);
-    heatbath_su3 = Temp_2;
-    su3_mat_mul(Temp_2, Temp_1, old_link);
-    old_link = Temp_2;
-
-
-  
-    su3_mat_mul(heatbath_su3, old_link, staple_sum);
-
-    extr_sub3(heatbath_su2, heatbath_su3);
-    su2_det_sqrt(sqrt_det, heatbath_su2);
-
-    if (sqrt_det <= __DBL_EPSILON__)
-    {
-        /*su3RandomMatrix(pu[n][dir]);*/
-        return 0.0;
-    }
-    su2_dble_div(heatbath_su2, sqrt_det);
-
-    alpha = sqrt_det * runParams.beta * 2.0 / 3.0;
-
-    count += generateSU2InHeatbath(&generated, alpha);
-    su2_mat_mul_dag(new_link_su2, generated, heatbath_su2);
-    create_su3_sub3(Temp_1, new_link_su2);
-
-
-    su3_mat_mul(Temp_2, Temp_1, heatbath_su3);
-    heatbath_su3 = Temp_2;
-    su3_mat_mul(Temp_2, Temp_1, old_link);
-    old_link = Temp_2;
 
     *pu[n][dir] = old_link;
-
 
     return 3.0 / count;
 #endif

@@ -2,8 +2,8 @@ outFileId     1
 outputDir     .
 beta          6.0
 epsilon       0.1
-nconf         10000
-ntherm        100000
+nconf         2
+ntherm        0
 ndecorr       1
 writeConfFreq 1
 seed          17846

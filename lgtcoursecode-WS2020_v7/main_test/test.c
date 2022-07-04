@@ -20,20 +20,30 @@
 
 #define MAIN_C
 
-#include"ranlxd.h"
-#include"modules.h"
-#include"test_utils.h"
+#include "ranlxd.h"
+#include "modules.h"
+#include "test_utils.h"
 #include <assert.h>
+#include <stdio.h>
 
-int main(int argc,char *argv[])
+int main(int argc, char *argv[])
 {
-   static_assert (LENGT==4 || LENGS1==4 || LENGS2==4 || LENGS3==4,
-           "To compile and run tests, please set lattice to 4^4.");
-   initArrayOfNeighbours();
-   initGaugeField(1);
-   /*runAllTests();*/
+    int seed, rconf;
+    char out_dir[NAME_SIZE];
+    char cnfg_file[FULL_PATH_SIZE + 12];
+    readInputFile(&seed, out_dir, &rconf, cnfg_file, argc, argv);
+    setupOutputFiles(runParams.idForOutputFilesName,out_dir);
+    initArrayOfNeighbours();
+    initGaugeField(0);
+    printf("%f\n", plaquette());
+    printf("test1\n");
+    readConfig("test.bin", 0);
+    printf("%f\n", plaquette());
 
-   
+    printf("test2\n");
+    //printf("%f %f %f %f", (*pu[0][0]).c0, (*pu[0][0]).c1, (*pu[0][0]).c2, (*pu[0][0]).c3);
+    releaseGaugeField();
+    /*runAllTests();*/
 
-   return 0;
+    return 0;
 }
